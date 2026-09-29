@@ -12,10 +12,10 @@ type Artist struct {
         Image        string   `json:"image"`
         Name         string   `json:"name"`
         Members      []string `json:"members"`
-        CreationDate int      `json:"creationdate"`
-        FirstAlbum   string   `json:"firstalbum"`
+        CreationDate int      `json:"creationDate"`
+        FirstAlbum   string   `json:"firstAlbum"`
         Locations    string   `json:"locations"`
-        ConcertDates string   `json:"concertdates"`
+        ConcertDates string   `json:"concertDates"`
         Relations    string   `json:"relations"`
 }
 
@@ -28,24 +28,26 @@ type RelationIndex struct {
         Index []Relation `json:"index"`
 }
 
+const baseUrl = "https://groupietrackers.herokuapp.com"
+
 func fetchArtists() ([]Artist, error) {
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get("/api/artists")
+	resp, err := client.Get(baseUrl + "/api/artists")
 
 	if err != nil { 
-		return []Artist{}, fmt.Errorf("Could not fetch artists: %v", err)
+		return []Artist{}, fmt.Errorf("Could not fetch artists: %w", err)
   	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return []Artist{}, fmt.Errorf("Server Error: %v", resp.StatusCode)
+		return []Artist{}, fmt.Errorf("Server Error: %w", resp.StatusCode)
 	}
 
 	var artists []Artist
 	err = json.NewDecoder(resp.Body).Decode(&artists)
 	if err != nil {
-		return []Artist{}, fmt.Errorf("failed to parse json: %v", err)
+		return []Artist{}, fmt.Errorf("failed to parse json: %w", err)
 	}
 
 	return artists, nil
@@ -54,20 +56,20 @@ func fetchArtists() ([]Artist, error) {
 func fetchRelations() (RelationIndex, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	
-	resp, err := client.Get("/api/relation")
+	resp, err := client.Get(baseUrl + "/api/relation")
 	if err != nil {
-		return RelationIndex{}, fmt.Errorf("Could not fetch relations: %v", err)
+		return RelationIndex{}, fmt.Errorf("Could not fetch relations: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return RelationIndex{}, fmt.Errorf("server error status: %d", resp.StatusCode)
+		return RelationIndex{}, fmt.Errorf("server error status: %w", resp.StatusCode)
 	}
 
 	var relationIndex RelationIndex
 	err = json.NewDecoder(resp.Body).Decode(&relationIndex)
 	if err != nil {
-		return RelationIndex{}, fmt.Errorf("failed to parse json: %v", err)
+		return RelationIndex{}, fmt.Errorf("failed to parse json: %w", err)
 	}
 
 	return relationIndex, nil
