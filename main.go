@@ -1,37 +1,32 @@
 package main
 
 import (
-	"fmt"
 	"groupie-tracker/api"
-	"os"
+	"html/template"
+	"log"
+	"net/http"
 )
 
 func main() {
+	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+
+	// stop the program on a fetch error so the server
+	// does not serve error pages to a visitor
 	artists, err := api.FetchArtists()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return
+		log.Fatal(err)
 	}
-	relations, err := api.FetchRelations()
+	relationIndex, err := api.FetchRelations()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return
+		log.Fatal(err)
 	}
 
-	id := 1
-	artist := api.ArtistByID(artists, id)
-	if artist == nil {
-		fmt.Fprintf(os.Stderr, "artist %d not found", id)
-		return
-	}
-	relation := api.RelationByID(relations.Index, artist.ID)
-	if relation == nil {
-		fmt.Fprintln(os.Stderr, "artist 1's relation not found")
-		return
-	}
+	app := &App{artists: artists, relations: relationIndex.Index, tmpl: tmpl}
 
-	fmt.Println(artist.Name)
-	for location, dates := range relation.DatesLocations {
-		fmt.Println(location, dates)
+	http.HandleFunc("/", app.home)
+	log.Println("listening on http://localhost:8080")
+
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal(err)
 	}
 }
